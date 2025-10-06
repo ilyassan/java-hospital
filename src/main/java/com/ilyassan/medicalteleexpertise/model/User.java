@@ -42,6 +42,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Specialty specialty;
 
+    private String token;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -171,6 +173,14 @@ public class User {
 
     public void setConsultations(List<Consultation> consultations) {
         this.consultations = consultations;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     // Repository instance

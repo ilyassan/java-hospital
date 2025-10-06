@@ -3,6 +3,7 @@ package com.ilyassan.medicalteleexpertise.seeder;
 import com.ilyassan.medicalteleexpertise.enums.Role;
 import com.ilyassan.medicalteleexpertise.enums.Specialty;
 import com.ilyassan.medicalteleexpertise.model.User;
+import com.ilyassan.medicalteleexpertise.util.PasswordUtil;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -57,7 +58,7 @@ public class UserSeeder implements ServletContextListener {
         nurse.setFirstName(firstName);
         nurse.setLastName(lastName);
         nurse.setEmail(email);
-        nurse.setPassword("password123");
+        nurse.setPassword(PasswordUtil.hashPassword("password123")); // Plain: password123
         nurse.setRole(Role.NURSE);
         nurse.setPhone(phone);
         nurse.create();
@@ -69,7 +70,7 @@ public class UserSeeder implements ServletContextListener {
         generalist.setFirstName(firstName);
         generalist.setLastName(lastName);
         generalist.setEmail(email);
-        generalist.setPassword("password123");
+        generalist.setPassword(PasswordUtil.hashPassword("password123")); // Plain: password123
         generalist.setRole(Role.GENERALIST);
         generalist.setPhone(phone);
         generalist.create();
@@ -81,7 +82,7 @@ public class UserSeeder implements ServletContextListener {
         specialist.setFirstName(firstName);
         specialist.setLastName(lastName);
         specialist.setEmail(email);
-        specialist.setPassword("password123");
+        specialist.setPassword(PasswordUtil.hashPassword("password123")); // Plain: password123
         specialist.setRole(Role.SPECIALIST);
         specialist.setSpecialty(specialty);
         specialist.setTariff(tariff);

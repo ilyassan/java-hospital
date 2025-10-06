@@ -10,6 +10,8 @@ import java.lang.reflect.Method;
 
 public abstract class BaseServlet extends HttpServlet {
 
+    private static final String VIEWS_PATH = "/WEB-INF/views/";
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         processRequest(req, resp);
@@ -23,7 +25,7 @@ public abstract class BaseServlet extends HttpServlet {
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
         if (action == null || action.isEmpty()) {
-            action = "list"; // Default action
+            action = "index"; // Default action
         }
 
         try {
@@ -34,5 +36,15 @@ public abstract class BaseServlet extends HttpServlet {
         } catch (Exception e) {
             throw new ServletException("Error executing action: " + action, e);
         }
+    }
+
+    /**
+     * Helper method to render a view
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @param viewName View name without path (e.g., "login.jsp")
+     */
+    protected void view(HttpServletRequest request, HttpServletResponse response, String viewName) throws ServletException, IOException {
+        request.getRequestDispatcher(VIEWS_PATH + viewName).forward(request, response);
     }
 }
