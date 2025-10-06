@@ -4,23 +4,13 @@ services:
     image: postgres:15-alpine
     container_name: medical_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=medical_tele_expertise
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  tomcat:
-    image: tomcat:11.0-jdk17-temurin
-    container_name: medical_tomcat
-    depends_on:
-      - postgres
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./target/medical-tele-expertise-1.0-SNAPSHOT.war:/usr/local/tomcat/webapps/ROOT.war:ro
 
 volumes:
   postgres_data:

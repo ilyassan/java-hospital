@@ -17,8 +17,9 @@ public class JPAInitializer implements ServletContextListener {
             JPAUtil.setEntityManagerFactory(emf);
             System.out.println("[JPAInitializer] JPA Initialized successfully.");
         } catch (Exception e) {
-            System.err.println("[JPAInitializer] Error initializing JPA: " + e.getMessage());
+            System.err.println("[JPAInitializer] FATAL ERROR initializing JPA: " + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("Failed to initialize JPA. Application cannot start.", e);
         }
     }
 
