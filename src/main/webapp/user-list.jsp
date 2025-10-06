@@ -18,15 +18,7 @@
         <c:forEach var="user" items="${listUser}">
             <tr>
                 <td><c:out value="${user.id}" /></td>
-                <td><c:out value="${user.name}" /></td>
                 <td><c:out value="${user.email}" /></td>
-                <td>
-                    <a href="users?action=show&id=<c:out value='${user.id}' />">View</a>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <a href="users?action=edit&id=<c:out value='${user.id}' />">Edit</a>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <a href="users?action=destroy&id=<c:out value='${user.id}' />">Delete</a>
-                </td>
             </tr>
         </c:forEach>
     </table>
