@@ -14,7 +14,7 @@ public class JPAInitializer implements ServletContextListener {
         System.out.println("[JPAInitializer] Initializing JPA...");
         try {
             EntityManagerFactory emf = Persistence.createEntityManagerFactory("default");
-            JPAUtil.setEntityManagerFactory(emf);
+            JpaUtil.setEntityManagerFactory(emf);
             System.out.println("[JPAInitializer] JPA Initialized successfully.");
         } catch (Exception e) {
             System.err.println("[JPAInitializer] FATAL ERROR initializing JPA: " + e.getMessage());
@@ -26,7 +26,7 @@ public class JPAInitializer implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         System.out.println("[JPAInitializer] Shutting down JPA...");
-        JPAUtil.shutdown();
+        JpaUtil.shutdown();
         System.out.println("[JPAInitializer] JPA shutdown complete.");
     }
 }

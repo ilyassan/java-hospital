@@ -1,8 +1,12 @@
 package com.ilyassan.medicalteleexpertise.model;
 
-import com.ilyassan.medicalteleexpertise.util.JPAUtil;
+import com.ilyassan.medicalteleexpertise.enums.Role;
+import com.ilyassan.medicalteleexpertise.enums.Specialty;
+import com.ilyassan.medicalteleexpertise.repository.BaseRepository;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -12,17 +16,59 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    // Fields specific to GENERALIST and NURSE roles
+    private String phone;
+
+    // Fields specific to SPECIALIST role
+    private Double tariff;
+
+    @Enumerated(EnumType.STRING)
+    private Specialty specialty;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "generalist", cascade = CascadeType.ALL)
+    private List<Queue> queues = new ArrayList<>();
+
+    @OneToMany(mappedBy = "specialist", cascade = CascadeType.ALL)
+    private List<Consultation> consultations = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     public User() {
     }
 
-    public User(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
-
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -31,12 +77,20 @@ public class User {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {
@@ -47,40 +101,99 @@ public class User {
         this.email = email;
     }
 
-    public void save() {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        tx.begin();
-        if (this.id == null) {
-            em.persist(this);
-        } else {
-            em.merge(this);
-        }
-        tx.commit();
-        em.close();
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public List<Queue> getQueues() {
+        return queues;
+    }
+
+    public void setQueues(List<Queue> queues) {
+        this.queues = queues;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public Double getTariff() {
+        return tariff;
+    }
+
+    public void setTariff(Double tariff) {
+        this.tariff = tariff;
+    }
+
+    public Specialty getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(Specialty specialty) {
+        this.specialty = specialty;
+    }
+
+    public List<Consultation> getConsultations() {
+        return consultations;
+    }
+
+    public void setConsultations(List<Consultation> consultations) {
+        this.consultations = consultations;
+    }
+
+    // Repository instance
+    private static final BaseRepository<User> repository = new BaseRepository<>(User.class);
+
+    // CRUD Methods
+    public void create() {
+        repository.create(this);
+    }
+
+    public void update() {
+        repository.update(this);
     }
 
     public void delete() {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        tx.begin();
-        em.remove(em.contains(this) ? this : em.merge(this));
-        tx.commit();
-        em.close();
+        repository.delete(this);
     }
 
     public static User find(Long id) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        User user = em.find(User.class, id);
-        em.close();
-        return user;
+        return repository.find(id);
     }
 
     public static List<User> all() {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        TypedQuery<User> query = em.createQuery("SELECT u FROM User u", User.class);
-        List<User> users = query.getResultList();
-        em.close();
-        return users;
+        return repository.all();
     }
 }

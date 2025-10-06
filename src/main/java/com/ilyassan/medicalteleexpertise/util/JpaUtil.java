@@ -2,7 +2,7 @@ package com.ilyassan.medicalteleexpertise.util;
 
 import jakarta.persistence.EntityManagerFactory;
 
-public class JPAUtil {
+public class JpaUtil {
 
     private static EntityManagerFactory entityManagerFactory;
 

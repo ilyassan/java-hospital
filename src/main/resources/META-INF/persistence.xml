@@ -5,6 +5,10 @@
              version="3.1">
     <persistence-unit name="default">
         <class>com.ilyassan.medicalteleexpertise.model.User</class>
+        <class>com.ilyassan.medicalteleexpertise.model.Patient</class>
+        <class>com.ilyassan.medicalteleexpertise.model.Queue</class>
+        <class>com.ilyassan.medicalteleexpertise.model.Consultation</class>
+        <class>com.ilyassan.medicalteleexpertise.model.TechnicalAct</class>
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5433/medical_tele_expertise"/>

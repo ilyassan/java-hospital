@@ -30,10 +30,14 @@ public class UserServlet extends BaseServlet {
     }
 
     public void store(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String name = request.getParameter("name");
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
         String email = request.getParameter("email");
-        User newUser = new User(name, email);
-        newUser.save();
+        User newUser = new User();
+        newUser.setFirstName(firstName);
+        newUser.setLastName(lastName);
+        newUser.setEmail(email);
+        newUser.create();
         response.sendRedirect("users");
     }
 
@@ -55,13 +59,15 @@ public class UserServlet extends BaseServlet {
 
     public void update(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Long id = Long.parseLong(request.getParameter("id"));
-        String name = request.getParameter("name");
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
         String email = request.getParameter("email");
 
         User user = User.find(id);
-        user.setName(name);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
         user.setEmail(email);
-        user.save();
+        user.update();
         response.sendRedirect("users");
     }
 
