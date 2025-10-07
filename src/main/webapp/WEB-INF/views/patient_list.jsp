@@ -2,9 +2,11 @@
 <%@ page import="com.ilyassan.medicalteleexpertise.model.User" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Patient" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Set" %>
 <%
   User user = (User) request.getAttribute("user");
   List<Patient> patients = (List<Patient>) request.getAttribute("patients");
+  Set<Long> inQueueIds = (Set<Long>) request.getAttribute("inQueueIds");
   String error = (String) request.getAttribute("error");
   Boolean searchPerformed = (Boolean) request.getAttribute("searchPerformed");
 %>
@@ -83,6 +85,10 @@
       text-decoration: none;
       border-radius: 4px;
       margin-right: 5px;
+    }
+    .action-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
     .search-form {
       margin-bottom: 20px;
@@ -165,6 +171,12 @@
         </td>
         <td>
           <a href="<%= request.getContextPath() %>/patient?action=updateVitalSignsForm&patientId=<%= patient.getId() %>" class="action-btn">Update</a>
+          <form action="<%= request.getContextPath() %>/queue?action=store" method="post" style="display:inline;">
+            <input type="hidden" name="patientId" value="<%= patient.getId() %>">
+            <button type="submit" class="action-btn" <%= inQueueIds.contains(patient.getId()) ? "disabled" : "" %>>
+              <%= inQueueIds.contains(patient.getId()) ? "In Queue" : "Add to Queue" %>
+            </button>
+          </form>
         </td>
       </tr>
       <% } %>

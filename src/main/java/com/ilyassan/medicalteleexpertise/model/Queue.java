@@ -15,15 +15,15 @@ public class Queue {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "generalist_id", nullable = false)
-    private User generalist;
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Patient patient;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime arrivalTime;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        arrivalTime = LocalDateTime.now();
     }
 
     public Queue() {
@@ -38,20 +38,20 @@ public class Queue {
         this.id = id;
     }
 
-    public User getGeneralist() {
-        return generalist;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public void setGeneralist(User generalist) {
-        this.generalist = generalist;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getArrivalTime() {
+        return arrivalTime;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setArrivalTime(LocalDateTime arrivalTime) {
+        this.arrivalTime = arrivalTime;
     }
 
     // Repository instance

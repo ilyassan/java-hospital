@@ -44,6 +44,9 @@ public class Patient {
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
     private List<Consultation> consultations = new ArrayList<>();
 
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
+    private List<Queue> queues = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -180,6 +183,14 @@ public class Patient {
 
     public void setConsultations(List<Consultation> consultations) {
         this.consultations = consultations;
+    }
+
+    public List<Queue> getQueues() {
+        return queues;
+    }
+
+    public void setQueues(List<Queue> queues) {
+        this.queues = queues;
     }
 
     // Repository instance

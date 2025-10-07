@@ -50,9 +50,6 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "generalist", cascade = CascadeType.ALL)
-    private List<Queue> queues = new ArrayList<>();
-
     @OneToMany(mappedBy = "specialist", cascade = CascadeType.ALL)
     private List<Consultation> consultations = new ArrayList<>();
 
@@ -133,14 +130,6 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public List<Queue> getQueues() {
-        return queues;
-    }
-
-    public void setQueues(List<Queue> queues) {
-        this.queues = queues;
     }
 
     public String getPhone() {

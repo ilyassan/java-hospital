@@ -42,40 +42,42 @@
             text-decoration: none;
             border-radius: 4px;
             margin-top: 10px;
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Dashboard</h1>
-        <a href="<%= request.getContextPath() %>/logout" class="logout-btn">Logout</a>
-    </div>
+<div class="header">
+    <h1>Dashboard</h1>
+    <a href="<%= request.getContextPath() %>/logout" class="logout-btn">Logout</a>
+</div>
 
-    <div class="user-info">
-        <h2>Welcome, <%= user.getFirstName() %> <%= user.getLastName() %></h2>
-        <p><strong>Email:</strong> <%= user.getEmail() %></p>
-        <p><strong>Role:</strong> <%= user.getRole() %></p>
-        <% if (user.getPhone() != null) { %>
-            <p><strong>Phone:</strong> <%= user.getPhone() %></p>
-        <% } %>
-        <% if (user.getSpecialty() != null) { %>
-            <p><strong>Specialty:</strong> <%= user.getSpecialty() %></p>
-        <% } %>
-        <% if (user.getTariff() != null) { %>
-            <p><strong>Tariff:</strong> <%= user.getTariff() %> DH</p>
-        <% } %>
-    </div>
+<div class="user-info">
+    <h2>Welcome, <%= user.getFirstName() %> <%= user.getLastName() %></h2>
+    <p><strong>Email:</strong> <%= user.getEmail() %></p>
+    <p><strong>Role:</strong> <%= user.getRole() %></p>
+    <% if (user.getPhone() != null) { %>
+    <p><strong>Phone:</strong> <%= user.getPhone() %></p>
+    <% } %>
+    <% if (user.getSpecialty() != null) { %>
+    <p><strong>Specialty:</strong> <%= user.getSpecialty() %></p>
+    <% } %>
+    <% if (user.getTariff() != null) { %>
+    <p><strong>Tariff:</strong> <%= user.getTariff() %> DH</p>
+    <% } %>
+</div>
 
-    <div class="content">
-        <h3>Your Features</h3>
-        <% if (user.getRole() == Role.NURSE) { %>
-            <p>Register a new patient or search for an existing one.</p>
-            <a href="<%= request.getContextPath() %>/patient">Create New Patient</a>
-        <% } else { %>
-            <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
-        <% } %>
-    </div>
+<div class="content">
+    <h3>Your Features</h3>
+    <% if (user.getRole() == Role.NURSE) { %>
+    <p>Register a new patient or search for an existing one.</p>
+    <a href="<%= request.getContextPath() %>/patient">Patient Management</a>
+    <a href="<%= request.getContextPath() %>/queue">View Queue</a>
+    <% } else { %>
+    <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
+    <% } %>
+</div>
 
-    <p><a href="<%= request.getContextPath() %>/">Back to Home</a></p>
+<p><a href="<%= request.getContextPath() %>/">Back to Home</a></p>
 </body>
 </html>

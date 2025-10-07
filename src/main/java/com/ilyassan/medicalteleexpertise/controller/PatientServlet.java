@@ -1,6 +1,5 @@
 package com.ilyassan.medicalteleexpertise.controller;
 
-import com.ilyassan.medicalteleexpertise.enums.Status;
 import com.ilyassan.medicalteleexpertise.model.Patient;
 import com.ilyassan.medicalteleexpertise.model.Queue;
 import com.ilyassan.medicalteleexpertise.model.User;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @WebServlet("/patient")
@@ -42,7 +41,7 @@ public class PatientServlet extends BaseServlet {
             patients = Patient.all().stream()
                     .filter(p -> p.getCin().equalsIgnoreCase(cin.trim()))
                     .collect(Collectors.toList());
-            if (! patients.isEmpty()) {
+            if (!patients.isEmpty()) {
                 request.setAttribute("searchPerformed", true);
             } else {
                 request.setAttribute("error", "No patient found with CIN: " + cin);
@@ -50,6 +49,11 @@ public class PatientServlet extends BaseServlet {
         } else {
             patients = Patient.all();
         }
+
+        Set<Long> inQueueIds = Queue.all().stream()
+                .map(q -> q.getPatient().getId())
+                .collect(Collectors.toSet());
+        request.setAttribute("inQueueIds", inQueueIds);
 
         request.setAttribute("patients", patients);
         request.setAttribute("user", user);
