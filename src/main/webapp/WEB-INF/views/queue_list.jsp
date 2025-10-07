@@ -52,6 +52,18 @@
       color: red;
       margin-bottom: 10px;
     }
+    .consult-btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 16px;
+      text-decoration: none;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    .consult-btn:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
@@ -90,6 +102,10 @@
       Height: <%= patient.getHeight() != null ? patient.getHeight() : "N/A" %>
       <% } else { %>
       No vital signs recorded
+      <% } %>
+      <% if (user.getRole() == com.ilyassan.medicalteleexpertise.enums.Role.GENERALIST) { %>
+      <br><br>
+      <a href="<%= request.getContextPath() %>/consultation?queueId=<%= queue.getId() %>" class="consult-btn">Consult</a>
       <% } %>
     </li>
     <% } %>

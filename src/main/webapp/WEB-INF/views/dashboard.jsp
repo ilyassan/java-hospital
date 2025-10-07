@@ -73,6 +73,9 @@
     <p>Register a new patient or search for an existing one.</p>
     <a href="<%= request.getContextPath() %>/patient">Patient Management</a>
     <a href="<%= request.getContextPath() %>/queue">View Queue</a>
+    <% } else if (user.getRole() == Role.GENERALIST) { %>
+    <p>View the queue and consult with patients.</p>
+    <a href="<%= request.getContextPath() %>/queue">View Queue</a>
     <% } else { %>
     <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
     <% } %>

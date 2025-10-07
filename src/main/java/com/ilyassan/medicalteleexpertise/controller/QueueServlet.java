@@ -25,7 +25,8 @@ public class QueueServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || (user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE
+                && user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.GENERALIST)) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
