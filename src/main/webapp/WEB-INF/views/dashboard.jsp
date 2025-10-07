@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.User" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.enums.Role" %>
 <%
     User user = (User) request.getAttribute("user");
 %>
@@ -33,6 +34,15 @@
             text-decoration: none;
             border-radius: 4px;
         }
+        .content a {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -57,8 +67,13 @@
     </div>
 
     <div class="content">
-        <h3>Role-specific features will be added here</h3>
-        <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
+        <h3>Your Features</h3>
+        <% if (user.getRole() == Role.NURSE) { %>
+            <p>Register a new patient or search for an existing one.</p>
+            <a href="<%= request.getContextPath() %>/patient">Create New Patient</a>
+        <% } else { %>
+            <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
+        <% } %>
     </div>
 
     <p><a href="<%= request.getContextPath() %>/">Back to Home</a></p>
