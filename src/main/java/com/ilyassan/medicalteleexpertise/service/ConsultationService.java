@@ -103,6 +103,14 @@ public class ConsultationService {
         return consultation;
     }
 
+    public Long getConsultationsCountOfSpecialist(Long id){
+        return Consultation.all().stream()
+                    .filter(c -> {
+                        return c.getSpecialist() != null && c.getSpecialist().getId().equals(id);
+                    })
+                    .count();
+    }
+
     public double calculateConsultationCost(List<TechnicalAct> technicalActs, User specialist) {
         double totalCost = CONSULTATION_PRICE;
 

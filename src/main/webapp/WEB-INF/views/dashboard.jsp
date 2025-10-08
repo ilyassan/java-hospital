@@ -78,8 +78,9 @@
     <a href="<%= request.getContextPath() %>/queue">View Queue</a>
     <a href="<%= request.getContextPath() %>/consultation">View Consultations</a>
     <% } else if (user.getRole() == Role.SPECIALIST) { %>
-    <p>View your consultation agenda and provide expert opinions.</p>
+    <p>View your consultation agenda and view you statistics.</p>
     <a href="<%= request.getContextPath() %>/specialist/consultations">View Consultations</a>
+    <a href="<%= request.getContextPath() %>/specialist/statistics">View Statistics</a>
     <% } else { %>
     <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
     <% } %>
