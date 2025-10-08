@@ -3,12 +3,16 @@
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Patient" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Queue" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.TechnicalAct" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.enums.Specialty" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
 <%
     User user = (User) request.getAttribute("user");
     Queue queue = (Queue) request.getAttribute("queue");
     Patient patient = (Patient) request.getAttribute("patient");
     List<TechnicalAct> technicalActs = (List<TechnicalAct>) request.getAttribute("technicalActs");
+    List<User> specialists = (List<User>) request.getAttribute("specialists");
+    Map<Long, List<String>> unavailableSlots = (Map<Long, List<String>>) request.getAttribute("unavailableSlots");
     String error = (String) request.getAttribute("error");
 %>
 <!DOCTYPE html>
@@ -113,8 +117,63 @@
             margin-left: 10px;
         }
         .error {
-            color: red;
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 15px;
+            border: 2px solid #ef5350;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        #specialistSection {
+            display: none;
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        #agendaSection {
+            display: none;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .time-slot {
+            padding: 12px;
+            text-align: center;
+            border: 2px solid #4CAF50;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: white;
+            transition: all 0.3s;
+        }
+        .time-slot:hover:not(.disabled):not(.selected) {
+            background-color: #e8f5e9;
+            transform: scale(1.05);
+        }
+        .time-slot.selected {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        .time-slot.disabled {
+            background-color: #f5f5f5;
+            border-color: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .period-label {
+            font-weight: bold;
+            margin-top: 20px;
             margin-bottom: 10px;
+            color: #333;
         }
     </style>
 </head>
@@ -176,6 +235,42 @@
             </div>
         </div>
 
+        <div id="specialistSection">
+            <h4>Select Specialist</h4>
+            <div class="form-group">
+                <label for="specialistId">Specialist *</label>
+                <select id="specialistId" name="specialistId" onchange="showAgenda()">
+                    <option value="">-- Select a Specialist --</option>
+                    <% if (specialists != null && !specialists.isEmpty()) { %>
+                        <% for (User specialist : specialists) { %>
+                        <option value="<%= specialist.getId() %>"
+                                data-specialty="<%= specialist.getSpecialty() %>"
+                                data-tariff="<%= specialist.getTariff() %>">
+                            <%= specialist.getFirstName() %> <%= specialist.getLastName() %> -
+                            <%= specialist.getSpecialty() %>
+                            (<%= specialist.getTariff() %> DH)
+                        </option>
+                        <% } %>
+                    <% } else { %>
+                        <option value="" disabled>No specialists available</option>
+                    <% } %>
+                </select>
+            </div>
+
+            <div id="agendaSection">
+                <h4>Select Time Slot (Today Only)</h4>
+                <p style="font-size: 14px; color: #666;">Available slots are 30 minutes each. Disabled slots are already booked.</p>
+
+                <input type="hidden" id="selectedDateTime" name="selectedDateTime">
+
+                <div class="period-label">Morning (8:00 AM - 12:00 PM)</div>
+                <div class="time-grid" id="morningSlots"></div>
+
+                <div class="period-label">Afternoon (2:00 PM - 6:00 PM)</div>
+                <div class="time-grid" id="afternoonSlots"></div>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="observations">Observations (Clinical Examination, Symptoms) *</label>
             <textarea id="observations" name="observations" required></textarea>
@@ -226,28 +321,166 @@
     </form>
 
     <script>
+        // Unavailable slots data from server
+        const unavailableSlots = <%= unavailableSlots != null ?
+            new com.google.gson.Gson().toJson(unavailableSlots) : "{}" %>;
+
         function toggleSpecialistFields(needSpecialist) {
             const opinionGroup = document.getElementById('opinionGroup');
             const recommendationsGroup = document.getElementById('recommendationsGroup');
             const opinion = document.getElementById('opinion');
             const recommendations = document.getElementById('recommendations');
+            const specialistSection = document.getElementById('specialistSection');
+            const specialistId = document.getElementById('specialistId');
 
             if (needSpecialist) {
-                // Hide and disable opinion and recommendations
+                // Hide and disable opinion and recommendations (specialist will fill these)
                 opinionGroup.style.display = 'none';
                 recommendationsGroup.style.display = 'none';
                 opinion.required = false;
                 recommendations.required = false;
                 opinion.value = '';
                 recommendations.value = '';
+
+                // Show specialist section
+                specialistSection.style.display = 'block';
+                specialistId.required = true;
             } else {
-                // Show and enable opinion and recommendations
+                // Show and enable opinion and recommendations (generalist fills all)
                 opinionGroup.style.display = 'block';
                 recommendationsGroup.style.display = 'block';
                 opinion.required = true;
                 recommendations.required = true;
+
+                // Hide specialist section
+                specialistSection.style.display = 'none';
+                specialistId.required = false;
+                document.getElementById('agendaSection').style.display = 'none';
             }
         }
+
+        function showAgenda() {
+            const specialistId = document.getElementById('specialistId').value;
+            const agendaSection = document.getElementById('agendaSection');
+
+            if (!specialistId) {
+                agendaSection.style.display = 'none';
+                return;
+            }
+
+            agendaSection.style.display = 'block';
+            generateTimeSlots(specialistId);
+        }
+
+        function generateTimeSlots(specialistId) {
+            const morningSlots = document.getElementById('morningSlots');
+            const afternoonSlots = document.getElementById('afternoonSlots');
+
+            morningSlots.innerHTML = '';
+            afternoonSlots.innerHTML = '';
+
+            const today = new Date();
+            console.log('Today date object:', today); // Debug
+            console.log('Year:', today.getFullYear(), 'Month:', today.getMonth() + 1, 'Day:', today.getDate()); // Debug
+
+            const unavailable = unavailableSlots[specialistId] || [];
+
+            // Morning slots: 8:00 AM - 12:00 PM (8 slots of 30 minutes)
+            for (let hour = 8; hour < 12; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    createTimeSlot(morningSlots, hour, minute, today, unavailable);
+                }
+            }
+
+            // Afternoon slots: 2:00 PM - 6:00 PM (8 slots of 30 minutes)
+            for (let hour = 14; hour < 18; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    createTimeSlot(afternoonSlots, hour, minute, today, unavailable);
+                }
+            }
+        }
+
+        function createTimeSlot(container, hour, minute, today, unavailable) {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'time-slot';
+
+            // Format time string
+            const hourStr = hour < 10 ? '0' + hour : '' + hour;
+            const minuteStr = minute < 10 ? '0' + minute : '' + minute;
+            const timeStr = hourStr + ':' + minuteStr;
+            slotDiv.textContent = timeStr;
+
+            // Create datetime string in format: YYYY-MM-DD HH:mm:00
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+
+            const monthStr = month < 10 ? '0' + month : '' + month;
+            const dayStr = day < 10 ? '0' + day : '' + day;
+
+            const dateTimeStr = year + '-' + monthStr + '-' + dayStr + ' ' + timeStr + ':00';
+
+            // Check if this slot is in the past
+            const now = new Date();
+            const slotTime = new Date(year, month - 1, day, hour, minute);
+            const isPast = slotTime <= now;
+
+            console.log('Creating slot - hour:', hour, 'minute:', minute, 'dateTimeStr:', dateTimeStr, 'isPast:', isPast); // Debug
+
+            // Check if this slot is unavailable or in the past
+            if (unavailable.includes(timeStr)) {
+                slotDiv.classList.add('disabled');
+                slotDiv.title = 'This time slot is already booked';
+            } else if (isPast) {
+                slotDiv.classList.add('disabled');
+                slotDiv.title = 'This time slot has already passed';
+            } else {
+                slotDiv.onclick = function() {
+                    selectTimeSlot(this, dateTimeStr);
+                };
+            }
+
+            container.appendChild(slotDiv);
+        }
+
+        function selectTimeSlot(element, dateTimeStr) {
+            // Remove selection from all slots
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+
+            // Select clicked slot
+            element.classList.add('selected');
+
+            // Set hidden input value
+            document.getElementById('selectedDateTime').value = dateTimeStr;
+            console.log('Selected time slot:', dateTimeStr); // Debug
+        }
+
+        // Form validation
+        document.getElementById('consultationForm').addEventListener('submit', function(e) {
+            const needSpecialist = document.querySelector('input[name="needSpecialist"]:checked').value;
+
+            if (needSpecialist === 'yes') {
+                const specialistId = document.getElementById('specialistId').value;
+                const selectedDateTime = document.getElementById('selectedDateTime').value;
+
+                console.log('Form validation - specialistId:', specialistId); // Debug
+                console.log('Form validation - selectedDateTime:', selectedDateTime); // Debug
+
+                if (!specialistId) {
+                    e.preventDefault();
+                    alert('Please select a specialist');
+                    return false;
+                }
+
+                if (!selectedDateTime || selectedDateTime.trim() === '') {
+                    e.preventDefault();
+                    alert('Please select a time slot by clicking on one of the available time blocks');
+                    return false;
+                }
+            }
+        });
     </script>
 </div>
 

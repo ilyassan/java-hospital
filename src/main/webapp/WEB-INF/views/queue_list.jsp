@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.enums.Role" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.User" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Patient" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Queue" %>
@@ -49,8 +50,13 @@
       border-radius: 4px;
     }
     .error {
-      color: red;
-      margin-bottom: 10px;
+      color: #d32f2f;
+      background-color: #ffebee;
+      padding: 15px;
+      border: 2px solid #ef5350;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-weight: bold;
     }
     .consult-btn {
       background-color: #4CAF50;
@@ -105,7 +111,7 @@
       <% } else { %>
       No vital signs recorded
       <% } %>
-      <% if (user.getRole() == com.ilyassan.medicalteleexpertise.enums.Role.GENERALIST && isFirst) { %>
+      <% if (user.getRole() == Role.GENERALIST && isFirst) { %>
       <br><br>
       <a href="<%= request.getContextPath() %>/consultation?action=create&queueId=<%= queue.getId() %>" class="consult-btn">Consult</a>
       <% } %>

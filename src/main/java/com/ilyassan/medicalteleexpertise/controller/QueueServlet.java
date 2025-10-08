@@ -1,5 +1,6 @@
 package com.ilyassan.medicalteleexpertise.controller;
 
+import com.ilyassan.medicalteleexpertise.enums.Role;
 import com.ilyassan.medicalteleexpertise.model.Patient;
 import com.ilyassan.medicalteleexpertise.model.Queue;
 import com.ilyassan.medicalteleexpertise.model.User;
@@ -25,8 +26,8 @@ public class QueueServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || (user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE
-                && user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.GENERALIST)) {
+        if (user == null || (user.getRole() != Role.NURSE
+                && user.getRole() != Role.GENERALIST)) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
@@ -34,6 +35,13 @@ public class QueueServlet extends BaseServlet {
         List<Queue> queues = Queue.all().stream()
                 .sorted((q1, q2) -> q1.getArrivalTime().compareTo(q2.getArrivalTime()))
                 .collect(Collectors.toList());
+
+        // Check if there's an error in session (from redirect)
+        String error = (String) session.getAttribute("error");
+        if (error != null) {
+            request.setAttribute("error", error);
+            session.removeAttribute("error"); // Clear it after reading
+        }
 
         request.setAttribute("queues", queues);
         request.setAttribute("user", user);
@@ -49,7 +57,7 @@ public class QueueServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }

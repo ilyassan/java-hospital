@@ -1,5 +1,6 @@
 package com.ilyassan.medicalteleexpertise.controller;
 
+import com.ilyassan.medicalteleexpertise.enums.Role;
 import com.ilyassan.medicalteleexpertise.model.Patient;
 import com.ilyassan.medicalteleexpertise.model.Queue;
 import com.ilyassan.medicalteleexpertise.model.User;
@@ -30,7 +31,7 @@ public class PatientServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
@@ -69,7 +70,7 @@ public class PatientServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
@@ -87,7 +88,7 @@ public class PatientServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
@@ -150,7 +151,7 @@ public class PatientServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
@@ -177,7 +178,7 @@ public class PatientServlet extends BaseServlet {
 
         Long userId = (Long) session.getAttribute("userId");
         User user = User.find(userId);
-        if (user == null || user.getRole() != com.ilyassan.medicalteleexpertise.enums.Role.NURSE) {
+        if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
