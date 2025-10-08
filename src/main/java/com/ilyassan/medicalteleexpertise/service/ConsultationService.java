@@ -6,6 +6,7 @@ import com.ilyassan.medicalteleexpertise.model.Consultation;
 import com.ilyassan.medicalteleexpertise.model.Patient;
 import com.ilyassan.medicalteleexpertise.model.TechnicalAct;
 import com.ilyassan.medicalteleexpertise.model.User;
+import com.ilyassan.medicalteleexpertise.repository.ConsultationRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 public class ConsultationService {
 
+    private final ConsultationRepository consultationRepository = new ConsultationRepository();
     public static final double CONSULTATION_PRICE = 150.0;
 
     public List<Consultation> getAllConsultations() {
@@ -142,5 +144,65 @@ public class ConsultationService {
             }
         }
         return acts;
+    }
+
+    public Map<String, Consultation> getSpecialistTodayAgenda(Long specialistId) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+        // Get all consultations for this specialist today
+        List<Consultation> consultations = Consultation.all().stream()
+                .filter(c -> c.getSpecialist() != null)
+                .filter(c -> c.getSpecialist().getId().equals(specialistId))
+                .filter(c -> c.getDate() != null)
+                .filter(c -> !c.getDate().isBefore(startOfDay) && !c.getDate().isAfter(endOfDay))
+                .collect(Collectors.toList());
+
+        // Map time slots to consultations
+        Map<String, Consultation> timeSlotConsultations = new HashMap<>();
+        for (Consultation consultation : consultations) {
+            LocalTime time = consultation.getDate().toLocalTime();
+            String timeSlot = String.format("%02d:%02d", time.getHour(), time.getMinute());
+            timeSlotConsultations.put(timeSlot, consultation);
+        }
+
+        return timeSlotConsultations;
+    }
+
+    public List<String> generateAllTimeSlots() {
+        List<String> timeSlots = new ArrayList<>();
+
+        // Morning slots: 8:00 AM - 12:00 PM (8 slots of 30 minutes)
+        for (int hour = 8; hour < 12; hour++) {
+            for (int minute = 0; minute < 60; minute += 30) {
+                timeSlots.add(String.format("%02d:%02d", hour, minute));
+            }
+        }
+
+        // Afternoon slots: 2:00 PM - 6:00 PM (8 slots of 30 minutes)
+        for (int hour = 14; hour < 18; hour++) {
+            for (int minute = 0; minute < 60; minute += 30) {
+                timeSlots.add(String.format("%02d:%02d", hour, minute));
+            }
+        }
+
+        return timeSlots;
+    }
+
+    public Consultation findById(Long id) {
+        return consultationRepository.findByIdWithTechnicalActs(id);
+    }
+
+    public void completeSpecialistConsultation(Long consultationId, String opinion, String recommendations) {
+        Consultation consultation = Consultation.find(consultationId);
+        if (consultation == null) {
+            throw new IllegalArgumentException("Consultation not found");
+        }
+
+        consultation.setOpinion(opinion);
+        consultation.setRecommendations(recommendations);
+        consultation.setStatus(Status.COMPLETED);
+        consultation.update();
     }
 }
