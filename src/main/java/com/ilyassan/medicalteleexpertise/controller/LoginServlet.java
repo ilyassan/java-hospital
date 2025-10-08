@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 @WebServlet("/login")
 public class LoginServlet extends BaseServlet {
@@ -50,16 +49,10 @@ public class LoginServlet extends BaseServlet {
             return;
         }
 
-        // Generate token and save to database
-        String token = UUID.randomUUID().toString();
-        user.setToken(token);
-        user.update();
-
         // Create session
         HttpSession session = request.getSession();
         session.setAttribute("userId", user.getId());
         session.setAttribute("userRole", user.getRole().name());
-        session.setAttribute("token", token);
 
         // Redirect to dashboard
         response.sendRedirect(request.getContextPath() + "/dashboard");

@@ -1,6 +1,5 @@
 package com.ilyassan.medicalteleexpertise.filter;
 
-import com.ilyassan.medicalteleexpertise.model.User;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,18 +21,6 @@ public class AuthFilter implements Filter {
 
         // Check if user is logged in
         if (session == null || session.getAttribute("userId") == null) {
-            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login");
-            return;
-        }
-
-        // Verify token in session matches token in database
-        Long userId = (Long) session.getAttribute("userId");
-        String sessionToken = (String) session.getAttribute("token");
-
-        User user = User.find(userId);
-
-        if (user == null || !sessionToken.equals(user.getToken())) {
-            session.invalidate();
             httpResponse.sendRedirect(httpRequest.getContextPath() + "/login");
             return;
         }

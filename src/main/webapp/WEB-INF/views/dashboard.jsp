@@ -76,6 +76,7 @@
     <% } else if (user.getRole() == Role.GENERALIST) { %>
     <p>View the queue and consult with patients.</p>
     <a href="<%= request.getContextPath() %>/queue">View Queue</a>
+    <a href="<%= request.getContextPath() %>/consultation">View Consultations</a>
     <% } else { %>
     <p>Based on your role (<%= user.getRole() %>), you will see specific features and functionalities.</p>
     <% } %>

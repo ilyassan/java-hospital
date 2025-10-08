@@ -66,8 +66,11 @@ public class BaseRepository<T> {
      */
     public void delete(T entity) {
         executeInTransaction(em -> {
-            T managedEntity = em.contains(entity) ? entity : em.merge(entity);
-            em.remove(managedEntity);
+            Object id = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity);
+            T managedEntity = em.find(entityClass, id);
+            if (managedEntity != null) {
+                em.remove(managedEntity);
+            }
         });
     }
 

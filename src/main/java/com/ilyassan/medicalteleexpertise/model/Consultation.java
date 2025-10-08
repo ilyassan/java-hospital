@@ -5,6 +5,7 @@ import com.ilyassan.medicalteleexpertise.enums.Status;
 import com.ilyassan.medicalteleexpertise.repository.BaseRepository;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,10 +22,14 @@ public class Consultation {
     private Patient patient;
 
     @ManyToOne
+    @JoinColumn(name = "generalist_id", nullable = false)
+    private User generalist;
+
+    @ManyToOne
     @JoinColumn(name = "specialist_id")
     private User specialist;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String observations;
 
     @Column(columnDefinition = "TEXT")
@@ -41,7 +46,22 @@ public class Consultation {
     @Column(nullable = false)
     private Status status;
 
+    @Column(nullable = false)
     private Double cost;
+
+    @Column(nullable = false)
+    private LocalDateTime date;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (date == null) {
+            date = LocalDateTime.now();
+        }
+    }
 
     @ManyToMany
     @JoinTable(
@@ -69,6 +89,14 @@ public class Consultation {
 
     public void setPatient(Patient patient) {
         this.patient = patient;
+    }
+
+    public User getGeneralist() {
+        return generalist;
+    }
+
+    public void setGeneralist(User generalist) {
+        this.generalist = generalist;
     }
 
     public User getSpecialist() {
@@ -133,6 +161,22 @@ public class Consultation {
 
     public void setTechnicalActs(List<TechnicalAct> technicalActs) {
         this.technicalActs = technicalActs;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     // Repository instance

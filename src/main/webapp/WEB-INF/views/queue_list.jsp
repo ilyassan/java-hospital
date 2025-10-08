@@ -85,7 +85,9 @@
   <% } %>
   <% if (queues != null && !queues.isEmpty()) { %>
   <ol>
-    <% for (Queue queue : queues) {
+    <%
+      boolean isFirst = true;
+      for (Queue queue : queues) {
       Patient patient = queue.getPatient();
     %>
     <li>
@@ -103,12 +105,15 @@
       <% } else { %>
       No vital signs recorded
       <% } %>
-      <% if (user.getRole() == com.ilyassan.medicalteleexpertise.enums.Role.GENERALIST) { %>
+      <% if (user.getRole() == com.ilyassan.medicalteleexpertise.enums.Role.GENERALIST && isFirst) { %>
       <br><br>
-      <a href="<%= request.getContextPath() %>/consultation?queueId=<%= queue.getId() %>" class="consult-btn">Consult</a>
+      <a href="<%= request.getContextPath() %>/consultation?action=create&queueId=<%= queue.getId() %>" class="consult-btn">Consult</a>
       <% } %>
     </li>
-    <% } %>
+    <%
+        isFirst = false;
+      }
+    %>
   </ol>
   <% } else { %>
   <p>No patients in the queue.</p>
