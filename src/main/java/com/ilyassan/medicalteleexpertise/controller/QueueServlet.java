@@ -4,6 +4,9 @@ import com.ilyassan.medicalteleexpertise.enums.Role;
 import com.ilyassan.medicalteleexpertise.model.Patient;
 import com.ilyassan.medicalteleexpertise.model.Queue;
 import com.ilyassan.medicalteleexpertise.model.User;
+import com.ilyassan.medicalteleexpertise.service.PatientService;
+import com.ilyassan.medicalteleexpertise.service.QueueService;
+import com.ilyassan.medicalteleexpertise.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,10 +15,13 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @WebServlet("/queue")
 public class QueueServlet extends BaseServlet {
+
+    private final QueueService queueService = new QueueService();
+    private final UserService userService = new UserService();
+    private final PatientService patientService = new PatientService();
 
     public void index(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -25,22 +31,19 @@ public class QueueServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || (user.getRole() != Role.NURSE
                 && user.getRole() != Role.GENERALIST)) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
 
-        List<Queue> queues = Queue.all().stream()
-                .sorted((q1, q2) -> q1.getArrivalTime().compareTo(q2.getArrivalTime()))
-                .collect(Collectors.toList());
+        List<Queue> queues = queueService.getAllQueuesSortedByArrival();
 
-        // Check if there's an error in session (from redirect)
         String error = (String) session.getAttribute("error");
         if (error != null) {
             request.setAttribute("error", error);
-            session.removeAttribute("error"); // Clear it after reading
+            session.removeAttribute("error");
         }
 
         request.setAttribute("queues", queues);
@@ -56,7 +59,7 @@ public class QueueServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
@@ -64,25 +67,20 @@ public class QueueServlet extends BaseServlet {
 
         try {
             Long patientId = Long.parseLong(request.getParameter("patientId"));
-            Patient patient = Patient.find(patientId);
+            Patient patient = patientService.findById(patientId);
             if (patient == null) {
                 request.setAttribute("error", "Patient not found.");
                 index(request, response);
                 return;
             }
 
-            boolean isAlreadyInQueue = Queue.all().stream()
-                    .anyMatch(q -> q.getPatient().getId().equals(patientId));
-
-            if (isAlreadyInQueue) {
+            if (queueService.isPatientInQueue(patientId)) {
                 request.setAttribute("error", "Patient is already in the queue.");
                 index(request, response);
                 return;
             }
 
-            Queue queue = new Queue();
-            queue.setPatient(patient);
-            queue.create();
+            queueService.addPatientToQueue(patient);
 
             response.sendRedirect(request.getContextPath() + "/patient");
         } catch (NumberFormatException e) {

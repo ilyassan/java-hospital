@@ -2,8 +2,10 @@ package com.ilyassan.medicalteleexpertise.controller;
 
 import com.ilyassan.medicalteleexpertise.enums.Role;
 import com.ilyassan.medicalteleexpertise.model.Patient;
-import com.ilyassan.medicalteleexpertise.model.Queue;
 import com.ilyassan.medicalteleexpertise.model.User;
+import com.ilyassan.medicalteleexpertise.service.PatientService;
+import com.ilyassan.medicalteleexpertise.service.QueueService;
+import com.ilyassan.medicalteleexpertise.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,10 +19,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @WebServlet("/patient")
 public class PatientServlet extends BaseServlet {
+
+    private final PatientService patientService = new PatientService();
+    private final UserService userService = new UserService();
+    private final QueueService queueService = new QueueService();
 
     public void index(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -30,7 +35,7 @@ public class PatientServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
@@ -39,21 +44,19 @@ public class PatientServlet extends BaseServlet {
         String cin = request.getParameter("cin");
         List<Patient> patients;
         if (cin != null && !cin.trim().isEmpty()) {
-            patients = Patient.all().stream()
-                    .filter(p -> p.getCin().equalsIgnoreCase(cin.trim()))
-                    .collect(Collectors.toList());
-            if (!patients.isEmpty()) {
+            Patient patient = patientService.findByCin(cin.trim());
+            if (patient != null) {
+                patients = List.of(patient);
                 request.setAttribute("searchPerformed", true);
             } else {
+                patients = patientService.getAllPatients();
                 request.setAttribute("error", "No patient found with CIN: " + cin);
             }
         } else {
-            patients = Patient.all();
+            patients = patientService.getAllPatients();
         }
 
-        Set<Long> inQueueIds = Queue.all().stream()
-                .map(q -> q.getPatient().getId())
-                .collect(Collectors.toSet());
+        Set<Long> inQueueIds = queueService.getPatientIdsInQueue();
         request.setAttribute("inQueueIds", inQueueIds);
 
         request.setAttribute("patients", patients);
@@ -69,7 +72,7 @@ public class PatientServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
@@ -87,7 +90,7 @@ public class PatientServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
@@ -132,7 +135,7 @@ public class PatientServlet extends BaseServlet {
             patient.setWeight(Double.parseDouble(weight));
             patient.setHeight(Double.parseDouble(height));
             patient.setVitalSignsTimestamp(LocalDateTime.now());
-            patient.create();
+            patientService.createPatient(patient);
 
             response.sendRedirect(request.getContextPath() + "/patient");
         } catch (DateTimeParseException | NumberFormatException e) {
@@ -150,14 +153,14 @@ public class PatientServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
 
         String patientId = request.getParameter("patientId");
-        Patient patient = Patient.find(Long.parseLong(patientId));
+        Patient patient = patientService.findById(Long.parseLong(patientId));
         if (patient == null) {
             request.setAttribute("error", "Patient not found.");
             index(request, response);
@@ -177,7 +180,7 @@ public class PatientServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
         if (user == null || user.getRole() != Role.NURSE) {
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
@@ -215,12 +218,12 @@ public class PatientServlet extends BaseServlet {
             patient.setWeight(Double.parseDouble(weight));
             patient.setHeight(Double.parseDouble(height));
             patient.setVitalSignsTimestamp(LocalDateTime.now());
-            patient.update();
+            patientService.updatePatient(patient);
 
             response.sendRedirect(request.getContextPath() + "/patient");
         } catch (NumberFormatException e) {
             request.setAttribute("error", "Invalid input format for vital signs.");
-            request.setAttribute("patient", Patient.find(Long.parseLong(request.getParameter("patientId"))));
+            request.setAttribute("patient", patientService.findById(Long.parseLong(request.getParameter("patientId"))));
             request.setAttribute("user", user);
             view(request, response, "patient_vital_signs.jsp");
         }

@@ -1,6 +1,7 @@
 package com.ilyassan.medicalteleexpertise.controller;
 
 import com.ilyassan.medicalteleexpertise.model.User;
+import com.ilyassan.medicalteleexpertise.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,8 @@ import java.io.IOException;
 @WebServlet("/dashboard")
 public class DashboardServlet extends BaseServlet {
 
+    private final UserService userService = new UserService();
+
     public void index(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
 
@@ -21,7 +24,7 @@ public class DashboardServlet extends BaseServlet {
         }
 
         Long userId = (Long) session.getAttribute("userId");
-        User user = User.find(userId);
+        User user = userService.findById(userId);
 
         if (user == null) {
             session.invalidate();
