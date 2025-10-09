@@ -93,6 +93,9 @@
             <% if (generalist.getPhone() != null && !generalist.getPhone().isEmpty()) { %>
             <p class="mb-0"><strong>Phone:</strong> <span class="text-primary fs-5 fw-bold"><%= generalist.getPhone() %></span></p>
             <% } %>
+            <% if (consultation.getMeetLink() != null) { %>
+            <p class="mb-0"><strong>Meet link: </strong><a href="<%= consultation.getMeetLink() %>"><%= consultation.getMeetLink() %></a></p>
+            <% } %>
         </div>
     </div>
     <% } %>

@@ -49,6 +49,9 @@ public class Consultation {
     @Column(nullable = false)
     private Double cost;
 
+    @Column(nullable = true)
+    private String meetLink;
+
     @Column(nullable = false)
     private LocalDateTime date;
 
@@ -154,6 +157,10 @@ public class Consultation {
     public void setCost(Double cost) {
         this.cost = cost;
     }
+
+    public String getMeetLink() { return meetLink; }
+
+    public void setMeetLink(String meetLink) { this.meetLink = meetLink; }
 
     public List<TechnicalAct> getTechnicalActs() {
         return technicalActs;

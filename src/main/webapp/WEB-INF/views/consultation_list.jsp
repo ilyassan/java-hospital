@@ -108,7 +108,7 @@
                 <th>ID</th>
                 <th>Patient</th>
                 <th>CIN</th>
-                <th>Generalist</th>
+                <th>Meet Link</th>
                 <th>Observations</th>
                 <th>Priority</th>
                 <th>Status</th>
@@ -122,7 +122,11 @@
                 <td>#<%= consultation.getId() %></td>
                 <td><%= consultation.getPatient().getFirstName() %> <%= consultation.getPatient().getLastName() %></td>
                 <td><%= consultation.getPatient().getCin() %></td>
-                <td><%= consultation.getGeneralist().getFirstName() %> <%= consultation.getGeneralist().getLastName() %></td>
+                <% if(consultation.getMeetLink() == null){ %>
+                <td><%= "Unavailable" %></td>
+                <% } else { %>
+                <td><a href="<%= consultation.getMeetLink() %>">Enter the meet</a></td>
+                <% } %>
                 <td><%= consultation.getObservations().length() > 50 ? consultation.getObservations().substring(0, 50) + "..." : consultation.getObservations() %></td>
                 <td><%= consultation.getPriority() %></td>
                 <td>
