@@ -34,11 +34,20 @@ public class SchedulerListener implements ServletContextListener {
                             nowDateTime.isBefore(c.getDate())
             );
 
+            Stream<Consultation> pastConsultations = consultations.stream().filter(c ->
+                    c.getMeetLink() != null && nowDateTime.isAfter(c.getDate())
+            );
+
             progressedConsultations.forEach(consultation -> {
                 // Generate Jitsi link
                 String meetLink = jitsiMeetService.createMeetLinkForConsultation(consultation);
                 consultation.setMeetLink(meetLink);
-                consultation.update(); // Persist to DB
+                consultation.update();
+            });
+
+            pastConsultations.forEach(consultation -> {
+                consultation.setMeetLink(null);
+                consultation.update();
             });
         }, 0, 1, TimeUnit.MINUTES);
     }
