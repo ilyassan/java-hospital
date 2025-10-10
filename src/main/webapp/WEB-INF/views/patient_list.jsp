@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.User" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Patient" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.util.CSRFUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Set" %>
 <%
@@ -172,6 +173,7 @@
         <td>
           <a href="<%= request.getContextPath() %>/patient?action=updateVitalSignsForm&patientId=<%= patient.getId() %>" class="action-btn">Update</a>
           <form action="<%= request.getContextPath() %>/queue?action=store" method="post" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">
             <input type="hidden" name="patientId" value="<%= patient.getId() %>">
             <button type="submit" class="action-btn" <%= inQueueIds.contains(patient.getId()) ? "disabled" : "" %>>
               <%= inQueueIds.contains(patient.getId()) ? "In Queue" : "Add to Queue" %>

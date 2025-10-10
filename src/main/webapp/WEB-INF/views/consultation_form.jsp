@@ -4,6 +4,7 @@
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Queue" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.TechnicalAct" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.enums.Specialty" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.util.CSRFUtil" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%
@@ -219,6 +220,7 @@
     <% } %>
 
     <form action="<%= request.getContextPath() %>/consultation?action=store" method="post" id="consultationForm">
+        <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">
         <input type="hidden" name="queueId" value="<%= queue.getId() %>">
 
         <div class="form-group">

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.User" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.util.CSRFUtil" %>
 <%
     User user = (User) request.getAttribute("user");
     String error = (String) request.getAttribute("error");
@@ -72,6 +73,8 @@
     <p class="error"><%= error %></p>
     <% } %>
     <form action="<%= request.getContextPath() %>/patient?action=store" method="post">
+        <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">
+
         <div class="form-group">
             <label for="cin">CIN (SSN):</label>
             <input type="text" id="cin" name="cin" required>

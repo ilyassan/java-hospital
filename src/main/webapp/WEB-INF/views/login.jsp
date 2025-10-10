@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.util.CSRFUtil" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -43,6 +44,8 @@
     <% } %>
 
     <form method="post" action="<%= request.getContextPath() %>/login?action=authenticate">
+        <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">
+
         <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>

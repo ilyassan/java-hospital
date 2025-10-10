@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.User" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Patient" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.util.CSRFUtil" %>
 <%
     User user = (User) request.getAttribute("user");
     Patient patient = (Patient) request.getAttribute("patient");
@@ -74,6 +75,7 @@
             <p class="error"><%= error %></p>
         <% } %>
         <form action="<%= request.getContextPath() %>/patient?action=updateVitalSigns" method="post">
+            <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">
             <input type="hidden" name="patientId" value="<%= patient.getId() %>">
             <div class="form-group">
                 <label for="bloodPressure">Blood Pressure:</label>

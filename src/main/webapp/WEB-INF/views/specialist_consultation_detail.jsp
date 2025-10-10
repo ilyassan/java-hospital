@@ -4,6 +4,7 @@
 <%@ page import="com.ilyassan.medicalteleexpertise.model.Patient" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.model.TechnicalAct" %>
 <%@ page import="com.ilyassan.medicalteleexpertise.enums.Status" %>
+<%@ page import="com.ilyassan.medicalteleexpertise.util.CSRFUtil" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%
     User user = (User) request.getAttribute("user");
@@ -162,6 +163,7 @@
         </div>
         <div class="card-body">
             <form action="<%= request.getContextPath() %>/specialist/consultations?action=submit" method="post" id="consultationForm">
+                <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">
                 <input type="hidden" name="consultationId" value="<%= consultation.getId() %>">
 
                 <div class="mb-3">
