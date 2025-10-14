@@ -66,7 +66,7 @@ public class Consultation {
         }
     }
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "consultation_technical_acts",
         joinColumns = @JoinColumn(name = "consultation_id"),

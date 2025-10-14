@@ -6,7 +6,6 @@ import com.ilyassan.medicalteleexpertise.model.Consultation;
 import com.ilyassan.medicalteleexpertise.model.Patient;
 import com.ilyassan.medicalteleexpertise.model.TechnicalAct;
 import com.ilyassan.medicalteleexpertise.model.User;
-import com.ilyassan.medicalteleexpertise.repository.ConsultationRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 
 public class ConsultationService {
 
-    private final ConsultationRepository consultationRepository = new ConsultationRepository();
     public static final double CONSULTATION_PRICE = 150.0;
 
     public List<Consultation> getAllConsultations() {
@@ -199,7 +197,7 @@ public class ConsultationService {
     }
 
     public Consultation findById(Long id) {
-        return consultationRepository.findByIdWithTechnicalActs(id);
+        return Consultation.find(id);
     }
 
     public void completeSpecialistConsultation(Long consultationId, String opinion, String recommendations) {
