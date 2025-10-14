@@ -9,6 +9,10 @@
   List<Patient> patients = (List<Patient>) request.getAttribute("patients");
   Set<Long> inQueueIds = (Set<Long>) request.getAttribute("inQueueIds");
   String error = (String) request.getAttribute("error");
+  String success = (String) session.getAttribute("success");
+  if (success != null) {
+    session.removeAttribute("success");
+  }
   Boolean searchPerformed = (Boolean) request.getAttribute("searchPerformed");
 %>
 <!DOCTYPE html>
@@ -112,6 +116,13 @@
       color: red;
       margin-bottom: 10px;
     }
+    .success {
+      color: green;
+      background-color: #e8f5e9;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -137,6 +148,9 @@
   <a href="<%= request.getContextPath() %>/patient?action=create" class="action-btn">Create New Patient</a>
   <% if (error != null) { %>
   <p class="error"><%= error %></p>
+  <% } %>
+  <% if (success != null) { %>
+  <p class="success"><%= success %></p>
   <% } %>
   <div class="table-container">
     <table>

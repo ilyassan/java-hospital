@@ -6,6 +6,7 @@
     User user = (User) request.getAttribute("user");
     Patient patient = (Patient) request.getAttribute("patient");
     String error = (String) request.getAttribute("error");
+    Boolean pendingQueue = (Boolean) request.getAttribute("pendingQueue");
 %>
 <!DOCTYPE html>
 <html>
@@ -54,6 +55,13 @@
             color: red;
             margin-bottom: 10px;
         }
+        .info {
+            color: #2196F3;
+            background-color: #E3F2FD;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
         .logout-btn {
             background-color: #f44336;
             color: white;
@@ -73,6 +81,9 @@
         <h2>Update Vital Signs for <%= patient.getFirstName() %> <%= patient.getLastName() %> (CIN: <%= patient.getCin() %>)</h2>
         <% if (error != null) { %>
             <p class="error"><%= error %></p>
+        <% } %>
+        <% if (pendingQueue != null && pendingQueue) { %>
+            <p class="info">⚠️ The patient's vital signs are more than 24 hours old. Please update them to add the patient to the queue.</p>
         <% } %>
         <form action="<%= request.getContextPath() %>/patient?action=updateVitalSigns" method="post">
             <input type="hidden" name="csrf_token" value="<%= CSRFUtil.getToken(request) %>">

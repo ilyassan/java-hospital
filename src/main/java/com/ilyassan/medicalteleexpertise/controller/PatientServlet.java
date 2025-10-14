@@ -167,6 +167,19 @@ public class PatientServlet extends BaseServlet {
             return;
         }
 
+        // Check if there's a pending queue operation
+        Long pendingQueuePatientId = (Long) session.getAttribute("pendingQueuePatientId");
+        if (pendingQueuePatientId != null) {
+            request.setAttribute("pendingQueue", true);
+        }
+
+        // Get error from session if exists
+        String error = (String) session.getAttribute("error");
+        if (error != null) {
+            request.setAttribute("error", error);
+            session.removeAttribute("error");
+        }
+
         request.setAttribute("patient", patient);
         request.setAttribute("user", user);
         view(request, response, "patient_vital_signs.jsp");
@@ -219,6 +232,19 @@ public class PatientServlet extends BaseServlet {
             patient.setHeight(Double.parseDouble(height));
             patient.setVitalSignsTimestamp(LocalDateTime.now());
             patientService.updatePatient(patient);
+
+            // Check if there's a pending queue operation
+            Long pendingQueuePatientId = (Long) session.getAttribute("pendingQueuePatientId");
+            if (pendingQueuePatientId != null && pendingQueuePatientId.equals(patient.getId())) {
+                // Remove the pending flag
+                session.removeAttribute("pendingQueuePatientId");
+
+                // Add patient to queue
+                if (!queueService.isPatientInQueue(patient.getId())) {
+                    queueService.addPatientToQueue(patient);
+                    session.setAttribute("success", "Vital signs updated and patient added to queue successfully.");
+                }
+            }
 
             response.sendRedirect(request.getContextPath() + "/patient");
         } catch (NumberFormatException e) {

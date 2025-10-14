@@ -80,6 +80,15 @@ public class QueueServlet extends BaseServlet {
                 return;
             }
 
+            // Check if vital signs are outdated (more than 24 hours old)
+            if (patientService.areVitalSignsOutdated(patient)) {
+                // Redirect to update vital signs page with a flag to return to queue
+                session.setAttribute("pendingQueuePatientId", patientId);
+                session.setAttribute("error", "Patient's vital signs are outdated. Please update them before adding to the queue.");
+                response.sendRedirect(request.getContextPath() + "/patient?action=updateVitalSignsForm&patientId=" + patientId);
+                return;
+            }
+
             queueService.addPatientToQueue(patient);
 
             response.sendRedirect(request.getContextPath() + "/patient");
