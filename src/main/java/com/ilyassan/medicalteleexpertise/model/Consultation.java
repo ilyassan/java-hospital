@@ -52,7 +52,7 @@ public class Consultation {
     @Column(nullable = true)
     private String meetLink;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDateTime date;
 
     @Column(nullable = false, updatable = false)

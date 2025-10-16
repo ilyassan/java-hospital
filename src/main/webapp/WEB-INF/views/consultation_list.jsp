@@ -36,6 +36,21 @@
             text-decoration: none;
             border-radius: 4px;
         }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -99,6 +114,23 @@
     <p><strong>Role:</strong> <%= user.getRole() %></p>
 </div>
 
+<%
+    String successMessage = (String) session.getAttribute("success");
+    String errorMessage = (String) session.getAttribute("error");
+    if (successMessage != null) {
+        session.removeAttribute("success");
+%>
+<div class="alert alert-success"><%= successMessage %></div>
+<%
+    }
+    if (errorMessage != null) {
+        session.removeAttribute("error");
+%>
+<div class="alert alert-error"><%= errorMessage %></div>
+<%
+    }
+%>
+
 <div class="content">
     <h3>All Consultations</h3>
     <% if (consultations != null && !consultations.isEmpty()) { %>
@@ -114,6 +146,7 @@
                 <th>Status</th>
                 <th>Cost (DH)</th>
                 <th>Created At</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -148,6 +181,9 @@
                 </td>
                 <td><%= consultation.getCost() != null ? String.format("%.2f", consultation.getCost()) : "N/A" %></td>
                 <td><%= consultation.getCreatedAt() != null ? consultation.getCreatedAt().toString() : "N/A" %></td>
+                <td>
+                    <a href="<%= request.getContextPath() %>/consultation?action=show&id=<%= consultation.getId() %>" class="view-btn">View Details</a>
+                </td>
             </tr>
             <% } %>
         </tbody>

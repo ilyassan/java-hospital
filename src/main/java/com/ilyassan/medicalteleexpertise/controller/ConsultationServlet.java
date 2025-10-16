@@ -48,6 +48,46 @@ public class ConsultationServlet extends BaseServlet {
         view(request, response, "consultation_list.jsp");
     }
 
+    public void show(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        User user = userService.findById(userId);
+        if (user == null || user.getRole() != Role.GENERALIST) {
+            response.sendRedirect(request.getContextPath() + "/dashboard");
+            return;
+        }
+
+        String consultationIdParam = request.getParameter("id");
+        if (consultationIdParam == null || consultationIdParam.isEmpty()) {
+            session.setAttribute("error", "Consultation ID is required");
+            response.sendRedirect(request.getContextPath() + "/consultation");
+            return;
+        }
+
+        try {
+            Long consultationId = Long.parseLong(consultationIdParam);
+            com.ilyassan.medicalteleexpertise.model.Consultation consultation = consultationService.findById(consultationId);
+
+            if (consultation == null) {
+                session.setAttribute("error", "Consultation not found");
+                response.sendRedirect(request.getContextPath() + "/consultation");
+                return;
+            }
+
+            request.setAttribute("user", user);
+            request.setAttribute("consultation", consultation);
+            view(request, response, "consultation_detail.jsp");
+        } catch (NumberFormatException e) {
+            session.setAttribute("error", "Invalid consultation ID");
+            response.sendRedirect(request.getContextPath() + "/consultation");
+        }
+    }
+
     public void create(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
@@ -80,16 +120,18 @@ public class ConsultationServlet extends BaseServlet {
             Patient patient = queue.getPatient();
             List<TechnicalAct> technicalActs = technicalActService.getAllTechnicalActs();
 
-            // Get all specialists and their unavailable slots
+            // Get all specialists and their unavailable slots for today and tomorrow
             List<User> specialists = userService.getAllSpecialists();
-            Map<Long, List<String>> unavailableSlots = consultationService.getUnavailableSlotsForToday(specialists);
+            Map<Long, List<String>> unavailableSlotsToday = consultationService.getUnavailableSlotsForToday(specialists);
+            Map<Long, List<String>> unavailableSlotsTomorrow = consultationService.getUnavailableSlotsForTomorrow(specialists);
 
             request.setAttribute("user", user);
             request.setAttribute("queue", queue);
             request.setAttribute("patient", patient);
             request.setAttribute("technicalActs", technicalActs);
             request.setAttribute("specialists", specialists);
-            request.setAttribute("unavailableSlots", unavailableSlots);
+            request.setAttribute("unavailableSlotsToday", unavailableSlotsToday);
+            request.setAttribute("unavailableSlotsTomorrow", unavailableSlotsTomorrow);
             view(request, response, "consultation_form.jsp");
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/queue");
@@ -132,7 +174,7 @@ public class ConsultationServlet extends BaseServlet {
 
             if ("yes".equals(needSpecialist)) {
                 // Scenario B: Request specialist opinion
-                consultationService.validateSpecialistSelection(specialistIdStr, selectedDateTime);
+//                consultationService.validateSpecialistSelection(specialistIdStr, selectedDateTime);
 
                 Long specialistId = Long.parseLong(specialistIdStr);
                 User specialist = userService.findById(specialistId);
@@ -162,6 +204,93 @@ public class ConsultationServlet extends BaseServlet {
             HttpSession errorSession = request.getSession();
             errorSession.setAttribute("error", "Error creating consultation: " + e.getMessage() + " - " + e.getClass().getSimpleName());
             response.sendRedirect(request.getContextPath() + "/queue");
+        }
+    }
+
+    public void complete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        User user = userService.findById(userId);
+        if (user == null || user.getRole() != Role.GENERALIST) {
+            response.sendRedirect(request.getContextPath() + "/dashboard");
+            return;
+        }
+
+        try {
+            String consultationIdParam = request.getParameter("consultationId");
+            String opinion = request.getParameter("opinion");
+            String recommendations = request.getParameter("recommendations");
+
+            if (consultationIdParam == null || consultationIdParam.isEmpty()) {
+                throw new IllegalArgumentException("Consultation ID is required");
+            }
+
+            Long consultationId = Long.parseLong(consultationIdParam);
+            consultationService.completeGeneralistConsultation(consultationId, opinion, recommendations);
+
+            session.setAttribute("success", "Consultation completed successfully!");
+            response.sendRedirect(request.getContextPath() + "/consultation");
+        } catch (Exception e) {
+            session.setAttribute("error", "Error completing consultation: " + e.getMessage());
+            String consultationId = request.getParameter("consultationId");
+            if (consultationId != null) {
+                response.sendRedirect(request.getContextPath() + "/consultation?action=show&id=" + consultationId);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/consultation");
+            }
+        }
+    }
+
+    public void cancelAndComplete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        User user = userService.findById(userId);
+        if (user == null || user.getRole() != Role.GENERALIST) {
+            response.sendRedirect(request.getContextPath() + "/dashboard");
+            return;
+        }
+
+        try {
+            String consultationIdParam = request.getParameter("consultationId");
+            String cancelSpecialist = request.getParameter("cancelSpecialist");
+            String opinion = request.getParameter("opinion");
+            String recommendations = request.getParameter("recommendations");
+
+            if (consultationIdParam == null || consultationIdParam.isEmpty()) {
+                throw new IllegalArgumentException("Consultation ID is required");
+            }
+
+            Long consultationId = Long.parseLong(consultationIdParam);
+
+            // Check if the checkbox was checked
+            if ("true".equals(cancelSpecialist)) {
+                // Cancel the specialist and complete the consultation
+                consultationService.cancelAndCompleteConsultation(consultationId, opinion, recommendations);
+                session.setAttribute("success", "Specialist review cancelled and consultation completed successfully!");
+            } else {
+                // Just redirect back if checkbox wasn't checked
+                session.setAttribute("error", "No action was taken. Please check the cancel specialist checkbox to proceed.");
+            }
+
+            response.sendRedirect(request.getContextPath() + "/consultation");
+        } catch (Exception e) {
+            session.setAttribute("error", "Error processing consultation: " + e.getMessage());
+            String consultationId = request.getParameter("consultationId");
+            if (consultationId != null) {
+                response.sendRedirect(request.getContextPath() + "/consultation?action=show&id=" + consultationId);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/consultation");
+            }
         }
     }
 }

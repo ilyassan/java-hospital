@@ -13,7 +13,8 @@
     Patient patient = (Patient) request.getAttribute("patient");
     List<TechnicalAct> technicalActs = (List<TechnicalAct>) request.getAttribute("technicalActs");
     List<User> specialists = (List<User>) request.getAttribute("specialists");
-    Map<Long, List<String>> unavailableSlots = (Map<Long, List<String>>) request.getAttribute("unavailableSlots");
+    Map<Long, List<String>> unavailableSlotsToday = (Map<Long, List<String>>) request.getAttribute("unavailableSlotsToday");
+    Map<Long, List<String>> unavailableSlotsTomorrow = (Map<Long, List<String>>) request.getAttribute("unavailableSlotsTomorrow");
     String error = (String) request.getAttribute("error");
 %>
 <!DOCTYPE html>
@@ -260,8 +261,9 @@
             </div>
 
             <div id="agendaSection">
-                <h4>Select Time Slot (Today Only)</h4>
-                <p style="font-size: 14px; color: #666;">Available slots are 30 minutes each. Disabled slots are already booked.</p>
+                <h4>Select Time Slot</h4>
+                <p style="font-size: 14px; color: #666;">Available slots are 30 minutes each. Disabled slots are already booked or passed.</p>
+                <p id="dateIndicator" style="font-size: 14px; font-weight: bold; color: #4CAF50; margin-bottom: 15px;"></p>
 
                 <input type="hidden" id="selectedDateTime" name="selectedDateTime">
 
@@ -324,8 +326,10 @@
 
     <script>
         // Unavailable slots data from server
-        const unavailableSlots = <%= unavailableSlots != null ?
-            new com.google.gson.Gson().toJson(unavailableSlots) : "{}" %>;
+        const unavailableSlotsToday = <%= unavailableSlotsToday != null ?
+            new com.google.gson.Gson().toJson(unavailableSlotsToday) : "{}" %>;
+        const unavailableSlotsTomorrow = <%= unavailableSlotsTomorrow != null ?
+            new com.google.gson.Gson().toJson(unavailableSlotsTomorrow) : "{}" %>;
 
         function toggleSpecialistFields(needSpecialist) {
             const opinionGroup = document.getElementById('opinionGroup');
@@ -377,32 +381,91 @@
         function generateTimeSlots(specialistId) {
             const morningSlots = document.getElementById('morningSlots');
             const afternoonSlots = document.getElementById('afternoonSlots');
+            const dateIndicator = document.getElementById('dateIndicator');
 
             morningSlots.innerHTML = '';
             afternoonSlots.innerHTML = '';
 
-            const today = new Date();
-            console.log('Today date object:', today); // Debug
-            console.log('Year:', today.getFullYear(), 'Month:', today.getMonth() + 1, 'Day:', today.getDate()); // Debug
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-            const unavailable = unavailableSlots[specialistId] || [];
+            // Check if all today's slots are unavailable or past
+            const unavailableToday = unavailableSlotsToday[specialistId] || [];
+            let allTodaySlotsUnavailable = true;
+
+            // Check all today's time slots
+            for (let hour = 8; hour < 12; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    const slotTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, minute);
+                    const hourStr = hour < 10 ? '0' + hour : '' + hour;
+                    const minuteStr = minute < 10 ? '0' + minute : '' + minute;
+                    const timeStr = hourStr + ':' + minuteStr;
+
+                    const isPast = slotTime <= now;
+                    const isBooked = unavailableToday.includes(timeStr);
+
+                    if (!isPast && !isBooked) {
+                        allTodaySlotsUnavailable = false;
+                        break;
+                    }
+                }
+                if (!allTodaySlotsUnavailable) break;
+            }
+
+            if (allTodaySlotsUnavailable) {
+                for (let hour = 14; hour < 18; hour++) {
+                    for (let minute = 0; minute < 60; minute += 30) {
+                        const slotTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, minute);
+                        const hourStr = hour < 10 ? '0' + hour : '' + hour;
+                        const minuteStr = minute < 10 ? '0' + minute : '' + minute;
+                        const timeStr = hourStr + ':' + minuteStr;
+
+                        const isPast = slotTime <= now;
+                        const isBooked = unavailableToday.includes(timeStr);
+
+                        if (!isPast && !isBooked) {
+                            allTodaySlotsUnavailable = false;
+                            break;
+                        }
+                    }
+                    if (!allTodaySlotsUnavailable) break;
+                }
+            }
+
+            // Use tomorrow's date if all today's slots are unavailable
+            let targetDate, unavailable, dateLabel;
+            if (allTodaySlotsUnavailable) {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                targetDate = tomorrow;
+                unavailable = unavailableSlotsTomorrow[specialistId] || [];
+                dateLabel = 'Tomorrow - ' + tomorrow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                console.log('All today slots unavailable, showing tomorrow');
+            } else {
+                targetDate = today;
+                unavailable = unavailableToday;
+                dateLabel = 'Today - ' + today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                console.log('Showing today slots');
+            }
+
+            dateIndicator.textContent = dateLabel;
 
             // Morning slots: 8:00 AM - 12:00 PM (8 slots of 30 minutes)
             for (let hour = 8; hour < 12; hour++) {
                 for (let minute = 0; minute < 60; minute += 30) {
-                    createTimeSlot(morningSlots, hour, minute, today, unavailable);
+                    createTimeSlot(morningSlots, hour, minute, targetDate, unavailable, allTodaySlotsUnavailable);
                 }
             }
 
             // Afternoon slots: 2:00 PM - 6:00 PM (8 slots of 30 minutes)
             for (let hour = 14; hour < 18; hour++) {
                 for (let minute = 0; minute < 60; minute += 30) {
-                    createTimeSlot(afternoonSlots, hour, minute, today, unavailable);
+                    createTimeSlot(afternoonSlots, hour, minute, targetDate, unavailable, allTodaySlotsUnavailable);
                 }
             }
         }
 
-        function createTimeSlot(container, hour, minute, today, unavailable) {
+        function createTimeSlot(container, hour, minute, targetDate, unavailable, isShowingTomorrow) {
             const slotDiv = document.createElement('div');
             slotDiv.className = 'time-slot';
 
@@ -413,21 +476,21 @@
             slotDiv.textContent = timeStr;
 
             // Create datetime string in format: YYYY-MM-DD HH:mm:00
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1;
-            const day = today.getDate();
+            const year = targetDate.getFullYear();
+            const month = targetDate.getMonth() + 1;
+            const day = targetDate.getDate();
 
             const monthStr = month < 10 ? '0' + month : '' + month;
             const dayStr = day < 10 ? '0' + day : '' + day;
 
             const dateTimeStr = year + '-' + monthStr + '-' + dayStr + ' ' + timeStr + ':00';
 
-            // Check if this slot is in the past
+            // Check if this slot is in the past (only for today's slots)
             const now = new Date();
             const slotTime = new Date(year, month - 1, day, hour, minute);
-            const isPast = slotTime <= now;
+            const isPast = !isShowingTomorrow && (slotTime <= now);
 
-            console.log('Creating slot - hour:', hour, 'minute:', minute, 'dateTimeStr:', dateTimeStr, 'isPast:', isPast); // Debug
+            console.log('Creating slot - hour:', hour, 'minute:', minute, 'dateTimeStr:', dateTimeStr, 'isPast:', isPast, 'isShowingTomorrow:', isShowingTomorrow);
 
             // Check if this slot is unavailable or in the past
             if (unavailable.includes(timeStr)) {
@@ -456,7 +519,7 @@
 
             // Set hidden input value
             document.getElementById('selectedDateTime').value = dateTimeStr;
-            console.log('Selected time slot:', dateTimeStr); // Debug
+            console.log('Selected time slot:', dateTimeStr);
         }
 
         // Form validation
@@ -467,8 +530,9 @@
                 const specialistId = document.getElementById('specialistId').value;
                 const selectedDateTime = document.getElementById('selectedDateTime').value;
 
-                console.log('Form validation - specialistId:', specialistId); // Debug
-                console.log('Form validation - selectedDateTime:', selectedDateTime); // Debug
+
+                console.log('Form validation - specialistId:', specialistId);
+                console.log('Form validation - selectedDateTime:', selectedDateTime);
 
                 if (!specialistId) {
                     e.preventDefault();

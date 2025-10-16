@@ -26,10 +26,17 @@ public class ConsultationService {
     }
 
     public Map<Long, List<String>> getUnavailableSlotsForToday(List<User> specialists) {
+        return getUnavailableSlotsForDate(specialists, LocalDate.now());
+    }
+
+    public Map<Long, List<String>> getUnavailableSlotsForTomorrow(List<User> specialists) {
+        return getUnavailableSlotsForDate(specialists, LocalDate.now().plusDays(1));
+    }
+
+    private Map<Long, List<String>> getUnavailableSlotsForDate(List<User> specialists, LocalDate date) {
         Map<Long, List<String>> unavailableSlots = new HashMap<>();
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
 
         for (User specialist : specialists) {
             List<String> bookedSlots = Consultation.all().stream()
@@ -209,6 +216,81 @@ public class ConsultationService {
         consultation.setOpinion(opinion);
         consultation.setRecommendations(recommendations);
         consultation.setStatus(Status.COMPLETED);
+        consultation.update();
+    }
+
+    public void completeGeneralistConsultation(Long consultationId, String opinion, String recommendations) {
+        Consultation consultation = Consultation.find(consultationId);
+        if (consultation == null) {
+            throw new IllegalArgumentException("Consultation not found");
+        }
+
+        // Validate that consultation has no specialist assigned (was cancelled)
+        if (consultation.getSpecialist() != null) {
+            throw new IllegalArgumentException("Cannot complete consultation - specialist is still assigned");
+        }
+
+        if (opinion == null || opinion.trim().isEmpty()) {
+            throw new IllegalArgumentException("Opinion is required");
+        }
+
+        if (recommendations == null || recommendations.trim().isEmpty()) {
+            throw new IllegalArgumentException("Recommendations are required");
+        }
+
+        consultation.setOpinion(opinion);
+        consultation.setRecommendations(recommendations);
+        consultation.setStatus(Status.COMPLETED);
+        consultation.update();
+    }
+
+    public void cancelAndCompleteConsultation(Long consultationId, String opinion, String recommendations) {
+        Consultation consultation = Consultation.find(consultationId);
+        if (consultation == null) {
+            throw new IllegalArgumentException("Consultation not found");
+        }
+
+        // Validate that consultation is pending specialist opinion
+        if (consultation.getStatus() != Status.PENDING_SPECIALIST_OPINION) {
+            throw new IllegalArgumentException("Only pending consultations can be cancelled");
+        }
+
+        // Validate that specialist is assigned
+        if (consultation.getSpecialist() == null) {
+            throw new IllegalArgumentException("No specialist assigned to this consultation");
+        }
+
+        // Validate that the meeting time hasn't begun
+        if (consultation.getDate() != null) {
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isAfter(consultation.getDate()) || now.isEqual(consultation.getDate())) {
+                throw new IllegalArgumentException("Cannot cancel consultation - meeting time has already begun");
+            }
+        }
+
+        // Validate opinion and recommendations
+        if (opinion == null || opinion.trim().isEmpty()) {
+            throw new IllegalArgumentException("Opinion is required");
+        }
+
+        if (recommendations == null || recommendations.trim().isEmpty()) {
+            throw new IllegalArgumentException("Recommendations are required");
+        }
+
+        // Recalculate cost without specialist tariff
+        double newCost = calculateConsultationCost(consultation.getTechnicalActs(), null);
+        consultation.setCost(newCost);
+
+        // Unassign specialist and remove appointment date
+        consultation.setSpecialist(null);
+        consultation.setDate(null);
+        consultation.setMeetLink(null);
+
+        // Set opinion, recommendations, and mark as completed
+        consultation.setOpinion(opinion);
+        consultation.setRecommendations(recommendations);
+        consultation.setStatus(Status.COMPLETED);
+
         consultation.update();
     }
 }
