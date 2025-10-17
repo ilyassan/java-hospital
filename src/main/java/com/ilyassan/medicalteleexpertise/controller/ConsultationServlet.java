@@ -174,7 +174,7 @@ public class ConsultationServlet extends BaseServlet {
 
             if ("yes".equals(needSpecialist)) {
                 // Scenario B: Request specialist opinion
-//                consultationService.validateSpecialistSelection(specialistIdStr, selectedDateTime);
+                consultationService.validateSpecialistSelection(specialistIdStr, selectedDateTime);
 
                 Long specialistId = Long.parseLong(specialistIdStr);
                 User specialist = userService.findById(specialistId);
